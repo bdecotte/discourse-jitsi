@@ -4,8 +4,8 @@ import loadScript from "discourse/lib/load-script";
 import { iconHTML } from "discourse-common/lib/icon-library";
 
 function launchJitsi($elem, user) {
-  loadScript("https://meet.jit.si/external_api.js").then(() => {
-    const domain = settings.meet_jitsi_domain;
+  const domain = settings.meet_jitsi_domain;
+  loadScript("https://" + domain + "/external_api.js").then(() => {
     const options = {
       roomName: $elem.data("room"),
       height: 450,
