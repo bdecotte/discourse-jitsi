@@ -21,7 +21,8 @@ function launchJitsi($elem, user) {
             //"avatar":  Discourse.getURL(url) + str_replace( '{size}', '60', user.avatar_template ),
             "name": user.username,
             "email": user.email,
-            "id": user.id
+            //user.username instead of user.id because jitsi/stanza expect a string
+            "id": user.username
           }
         },
         "aud": "jitsi",
