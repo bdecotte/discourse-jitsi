@@ -3,7 +3,8 @@ import showModal from "discourse/lib/show-modal";
 import loadScript from "discourse/lib/load-script";
 import { iconHTML } from "discourse-common/lib/icon-library";
 
-function makeJWT($elem, user){
+
+function launchJitsi($elem, user) {
   loadScript("https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/hmac-sha256.js").then(() => {
     loadScript("https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/components/enc-base64-min.js").then(() => {
       // Defining our token parts
@@ -55,35 +56,35 @@ function makeJWT($elem, user){
       signature = base64url(signature);
 
       var jitsiJwt = encodedHeader + "." + encodedPayload + "." + signature;
-      console.log("JWT" + jitsiJwt);
-      return jitsiJwt;
-    });
-  });
-}
+      console.log("JWT " + jitsiJwt);
+      $elem.data("jwt", jitsiJwt);
+      console.log("JWT " +   $elem.data("jwt"));
 
-function launchJitsi($elem, user, jitsiJwt) {
-  loadScript("https://meet.jit.si/external_api.js").then(() => {
-    const domain = settings.meet_jitsi_domain;
-    const options = {
-      jwt: jitsiJwt,
-      roomName: $elem.data("room"),
-      height: 450,
-      parentNode: $elem.parent()[0],
-      interfaceConfigOverwrite: {
-        DEFAULT_REMOTE_DISPLAY_NAME: ""
-      }
-    };
+      loadScript("https://meet.jit.si/external_api.js").then(() => {
+        const domain = settings.meet_jitsi_domain;
+        console.log("JWT1 " + $elem.data("jwt"));
+        const options = {
+          jwt: $elem.data("jwt"),
+          roomName: $elem.data("room"),
+          height: 450,
+          parentNode: $elem.parent()[0],
+          interfaceConfigOverwrite: {
+            DEFAULT_REMOTE_DISPLAY_NAME: ""
+          }
+        };
 
-    const jitsiAPI = new JitsiMeetExternalAPI(domain, options);
-    $elem.hide();
+        const jitsiAPI = new JitsiMeetExternalAPI(domain, options);
+        $elem.hide();
 
-    //if (user.username) {
-    //  jitsiAPI.executeCommand("displayName", user.username);
-    //}
+        //if (user.username) {
+        //  jitsiAPI.executeCommand("displayName", user.username);
+        //}
 
-    jitsiAPI.addEventListener("videoConferenceLeft", () => {
-      $elem.show();
-      $elem.next().remove();
+        jitsiAPI.addEventListener("videoConferenceLeft", () => {
+          $elem.show();
+          $elem.next().remove();
+        });
+      });
     });
   });
 }
@@ -98,8 +99,8 @@ function attachButton($elem, user) {
     )} ${buttonLabel}</button>`
   );
   $elem.find("button").on("click", () => {
-    var jitsiJwt = makeJWT($elem, user);
-    launchJitsi($elem, user, jitsiJwt);
+    //makeJWT($elem, user);
+    launchJitsi($elem, user);
   })
 }
 
