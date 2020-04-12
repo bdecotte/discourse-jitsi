@@ -3,10 +3,69 @@ import showModal from "discourse/lib/show-modal";
 import loadScript from "discourse/lib/load-script";
 import { iconHTML } from "discourse-common/lib/icon-library";
 
-function launchJitsi($elem, user) {
+function makeJWT($elem, user){
+  loadScript("https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/hmac-sha256.js").then(() => {
+    loadScript("https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/components/enc-base64-min.js").then(() => {
+      // Defining our token parts
+
+      var header = {
+        "typ": "JWT",
+        "alg": "HS256"
+      };
+
+      var payload = {
+        "context": {
+          "user": {
+            //url? gravatar?size?
+            //"avatar":  Discourse.getURL(url) + str_replace( '{size}', '60', user.avatar_template ),
+            "name": user.username,
+            "email": user.email,
+            "id": user.id
+          }
+        },
+        "aud": "jitsi",
+        "iss": "my_discourse",
+        "sub": settings.meet_jitsi_domain,
+        "room": $elem.data("room"),
+        //expire in 3 hours
+        "exp": new Date().getTime() + 3*3600000
+      };
+
+      var secret = settings.jitsi_jwt_secret;
+
+      function base64url(source) {
+        // Encode in classical base64
+        var encodedSource = CryptoJS.enc.Base64.stringify(source);
+        // Remove padding equal characters
+        encodedSource = encodedSource.replace(/=+$/, '');
+        // Replace characters according to base64url specifications
+        encodedSource = encodedSource.replace(/\+/g, '-');
+        encodedSource = encodedSource.replace(/\//g, '_');
+        return encodedSource;
+      }
+
+      var stringifiedHeader = CryptoJS.enc.Utf8.parse(JSON.stringify(header));
+      var encodedHeader = base64url(stringifiedHeader);
+
+      var stringifiedPayload = CryptoJS.enc.Utf8.parse(JSON.stringify(payload));
+      var encodedPayload = base64url(stringifiedPayload);
+
+      var signature = encodedHeader + "." + encodedPayload;
+      signature = CryptoJS.HmacSHA256(signature, secret);
+      signature = base64url(signature);
+
+      var jitsiJwt = encodedHeader + "." + encodedPayload + "." + signature;
+      console.log("JWT" + jitsiJwt);
+      return jitsiJwt;
+    });
+  });
+}
+
+function launchJitsi($elem, user, jitsiJwt) {
   loadScript("https://meet.jit.si/external_api.js").then(() => {
     const domain = settings.meet_jitsi_domain;
     const options = {
+      jwt: jitsiJwt,
       roomName: $elem.data("room"),
       height: 450,
       parentNode: $elem.parent()[0],
@@ -18,9 +77,9 @@ function launchJitsi($elem, user) {
     const jitsiAPI = new JitsiMeetExternalAPI(domain, options);
     $elem.hide();
 
-    if (user.username) {
-      jitsiAPI.executeCommand("displayName", user.username);
-    }
+    //if (user.username) {
+    //  jitsiAPI.executeCommand("displayName", user.username);
+    //}
 
     jitsiAPI.addEventListener("videoConferenceLeft", () => {
       $elem.show();
@@ -38,7 +97,10 @@ function attachButton($elem, user) {
       settings.button_icon
     )} ${buttonLabel}</button>`
   );
-  $elem.find("button").on("click", () => launchJitsi($elem, user));
+  $elem.find("button").on("click", () => {
+    var jitsiJwt = makeJWT($elem, user);
+    launchJitsi($elem, user, jitsiJwt);
+  })
 }
 
 function attachJitsi($elem, helper) {

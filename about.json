@@ -6,7 +6,11 @@
   "assets": {},
   "color_schemes": {},
   "modifiers": {
-    "csp_extensions": ["script_src: https://meet.jit.si/external_api.js"],
+    "csp_extensions": [
+      "script_src: https://meet.jit.si/external_api.js",
+      "script_src: https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/hmac-sha256.js",
+      "script_src: https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/components/enc-base64-min.js"
+    ],
     "svg_icons": ["video"]
   }
 }
