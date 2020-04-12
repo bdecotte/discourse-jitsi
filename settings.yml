@@ -2,6 +2,9 @@ only_available_to_staff:
   default: false
 meet_jitsi_domain:
   default: "meet.jit.si"
+jitsi_jwt_secret:
+  default: "supersecret"
+  description: "Enter the key to share with your jitsi server. "
 button_icon:
   default: "video"
   description: "Enter the name of the FontAwesome 5 icon to display in the Jitsi button. "
